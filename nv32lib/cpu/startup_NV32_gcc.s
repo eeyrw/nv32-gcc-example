@@ -81,7 +81,7 @@ __isr_vector:
     .long    __StackTop            /* Top of Stack */
     .long    Reset_Handler         /* Reset Handler */
     .long    NMI_Handler           /* NMI Handler */
-    .long    0                      /* Hard Fault Handler */
+    .long    0                     /* Hard Fault Handler */
     .long    0                     /* Reserved */
     .long    0                     /* Reserved */
     .long    0                     /* Reserved */
@@ -96,38 +96,38 @@ __isr_vector:
     .long    SysTick_Handler       /* SysTick Handler */
 
     /* External interrupts */
-    .long   Reserved16_IRQHandler         /* Reserved interrupt 16 */
-    .long   Reserved17_IRQHandler         /* Reserved interrupt 17 */
-    .long   Reserved18_IRQHandler         /* Reserved interrupt 18 */
-    .long   Reserved19_IRQHandler         /* Reserved interrupt 19 */
-    .long   Reserved20_IRQHandler         /* Reserved interrupt 20 */
-    .long   ETMRH_IRQHandler         /* ETMRH command complete/read collision interrupt */
+    .long   Reserved16_IRQHandler   /* Reserved interrupt 16 */
+    .long   Reserved17_IRQHandler   /* Reserved interrupt 17 */
+    .long   Reserved18_IRQHandler   /* Reserved interrupt 18 */
+    .long   Reserved19_IRQHandler   /* Reserved interrupt 19 */
+    .long   Reserved20_IRQHandler   /* Reserved interrupt 20 */
+    .long   ETMRH_IRQHandler        /* ETMRH command complete/read collision interrupt */
     .long   LVD_LVW_IRQHandler      /* Low Voltage Detect, Low Voltage Warning */
     .long   IRQ_IRQHandler          /* External interrupt */
     .long   I2C0_IRQHandler         /* I2C0 interrupt */
-    .long   Reserved25_IRQHandler         /* Reserved interrupt 25 */
+    .long   Reserved25_IRQHandler   /* Reserved interrupt 25 */
     .long   SPI0_IRQHandler         /* SPI0 interrupt */
     .long   SPI1_IRQHandler         /* SPI1 interrupt */
     .long   UART0_IRQHandler        /* UART0 status/error interrupt */
     .long   UART1_IRQHandler        /* UART1 status/error interrupt */
     .long   UART2_IRQHandler        /* UART2 status/error interrupt */
     .long   ADC0_IRQHandler         /* ADC0 interrupt */
-    .long   ACMP0_IRQHandler         /* CMP0 interrupt */
+    .long   ACMP0_IRQHandler        /* CMP0 interrupt */
     .long   ETM0_IRQHandler         /* ETM0 Single interrupt vector for all sources */
     .long   ETM1_IRQHandler         /* ETM1 Single interrupt vector for all sources */
     .long   ETM2_IRQHandler         /* ETM2 Single interrupt vector for all sources */
     .long   RTC_IRQHandler          /* RTC overflow */
-    .long   ACMP1_IRQHandler  /* ACMP1 interrupt */
-    .long   PIT_CH0_IRQHandler          /* PIT CH0 overflow */
-    .long   PIT_CH1_IRQHandler         /* PIT CH1 overflow */
+    .long   ACMP1_IRQHandler        /* ACMP1 interrupt */
+    .long   PIT_CH0_IRQHandler      /* PIT CH0 overflow */
+    .long   PIT_CH1_IRQHandler      /* PIT CH1 overflow */
     .long   KBI0_IRQHandler         /* Keyboard interrupt 0 */
     .long   KBI1_IRQHandler         /* Keyboard interrupt 1 */
-    .long   Reserved42_IRQHandler         /* Reserved interrupt 42 */
+    .long   Reserved42_IRQHandler   /* Reserved interrupt 42 */
     .long   ICS_IRQHandler          /* MCG interrupt */
-    .long   Watchdog_IRQHandler      /* WDOG Interrupt */
-    .long   Reserved45_IRQHandler         /* Reserved interrupt 45 */
-    .long   Reserved46_IRQHandler        /* Reserved interrupt 46 */
-    .long   Reserved47_IRQHandler        /* Reserved interrupt 47 */
+    .long   Watchdog_IRQHandler     /* WDOG Interrupt */
+    .long   Reserved45_IRQHandler   /* Reserved interrupt 45 */
+    .long   Reserved46_IRQHandler   /* Reserved interrupt 46 */
+    .long   Reserved47_IRQHandler   /* Reserved interrupt 47 */
 
     .size    __isr_vector, . - __isr_vector
 
