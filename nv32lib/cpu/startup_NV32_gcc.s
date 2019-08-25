@@ -49,7 +49,7 @@
 #ifdef __STACK_SIZE
     .equ    Stack_Size, __STACK_SIZE
 #else
-    .equ    Stack_Size, 0x80
+    .equ    Stack_Size, 0x400
 #endif
     .globl    __StackTop
     .globl    __StackLimit
@@ -163,7 +163,7 @@ Reset_Handler:
 
     ldr    r0, =SystemInit
     blx    r0
-    ldr    r0, =start
+    ldr    r0, =main
     bx    r0
     .pool
     .size Reset_Handler, . - Reset_Handler
@@ -234,6 +234,6 @@ kinetis_flash_config:
     .long 0xffffffff
     .long 0xffffffff
     .long 0xffffffff
-    .long 0xfffffffe
+    .long 0xfffeffff
 
     .end

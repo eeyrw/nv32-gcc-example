@@ -35,7 +35,7 @@ LINK_SCRIPT  = $(ROOT_DIR)/nv32f100.ld
 SRC       =
 ASM_SRC   =
 SRC      += $(USER_DIR)/main.c
-SRC      += $(USER_DIR)/gcc-stdio-retarget.c
+#SRC      += $(USER_DIR)/gcc-stdio-retarget.c
 # user include
 INCLUDE_DIRS  = $(USER_DIR)
 

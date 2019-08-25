@@ -7,7 +7,7 @@ MEMORY
   VECTORS (rx) : ORIGIN = 0x00000000, LENGTH = 0x00000400
   FLASH_PROTECTION	(rx) : ORIGIN = 0x00000400, LENGTH = 0x00000010
   FLASH (rx) : ORIGIN = 0x00000410, LENGTH = 128K - 0x00000410
-  RAM (rwx) : ORIGIN = 0x1FFFF0C0, LENGTH = 8K - 0xC0
+  RAM (rwx) : ORIGIN =  0x1FFFF800, LENGTH = 8K
 }
 
 /* Linker script to place sections and symbol values. Should be used together

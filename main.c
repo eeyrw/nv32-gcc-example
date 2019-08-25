@@ -25,7 +25,7 @@ int main(void)
   RTC_ConfigType sRTCConfig;
   RTC_ConfigType *pRTCConfig = &sRTCConfig;
 
-  printf("\nRunning the GPIO_demo project.\n");
+  //printf("\nRunning the GPIO_demo project.\n");
 
   /* 配置RTC模块每隔1s产生一次中断 */
   pRTCConfig->u16ModuloValue = 9;
