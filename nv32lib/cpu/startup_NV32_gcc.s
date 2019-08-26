@@ -1,87 +1,139 @@
-/* KL26Z startup ARM GCC, Martin Kojtal (0xc0170)
- * Purpose: startup file for Cortex-M0 devices. Should use with
- *   GCC for ARM Embedded Processors
- * Version: V1.2
- * Date: 15 Nov 2011
+/**
+  ******************************************************************************
+  * @file      startup_stm32f0xx.s
+  * @author    MCD Application Team
+  * @version   V1.5.0
+  * @date      05-December-2014
+  * @brief     STM32F030 Devices vector table for RIDE7 toolchain.
+  *            This module performs:
+  *                - Set the initial SP
+  *                - Set the initial PC == Reset_Handler,
+  *                - Set the vector table entries with the exceptions ISR address
+  *                - Configure the system clock 
+  *                - Branches to main in the C library (which eventually
+  *                  calls main()).
+  *            After Reset the Cortex-M0 processor is in Thread mode,
+  *            priority is Privileged, and the Stack is set to Main.
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; COPYRIGHT 2014 STMicroelectronics</center></h2>
+  *
+  * Licensed under MCD-ST Liberty SW License Agreement V2, (the "License");
+  * You may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at:
+  *
+  *        http://www.st.com/software_license_agreement_liberty_v2
+  *
+  * Unless required by applicable law or agreed to in writing, software 
+  * distributed under the License is distributed on an "AS IS" BASIS, 
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  *
+  ******************************************************************************
+  */
+
+  .syntax unified
+  .arch armv6-m
+  .fpu softvfp
+  .thumb
+
+.global g_pfnVectors
+.global Default_Handler
+
+/* start address for the initialization values of the .data section.
+defined in linker script */
+.word _sidata
+/* start address for the .data section. defined in linker script */
+.word _sdata
+/* end address for the .data section. defined in linker script */
+.word _edata
+/* start address for the .bss section. defined in linker script */
+.word _sbss
+/* end address for the .bss section. defined in linker script */
+.word _ebss
+
+
+
+
+  .section .text.Reset_Handler
+  .weak Reset_Handler
+  .type Reset_Handler, %function
+Reset_Handler:
+  ldr   r0, =_estack
+  mov   sp, r0          /* set stack pointer */
+
+/* Copy the data segment initializers from flash to SRAM */
+  movs r1, #0
+  b LoopCopyDataInit
+
+CopyDataInit:
+  ldr r3, =_sidata
+  ldr r3, [r3, r1]
+  str r3, [r0, r1]
+  adds r1, r1, #4
+
+LoopCopyDataInit:
+  ldr r0, =_sdata
+  ldr r3, =_edata
+  adds r2, r0, r1
+  cmp r2, r3
+  bcc CopyDataInit
+  ldr r2, =_sbss
+  b LoopFillZerobss
+/* Zero fill the bss segment. */
+FillZerobss:
+  movs r3, #0
+  str  r3, [r2]
+  adds r2, r2, #4
+
+
+LoopFillZerobss:
+  ldr r3, = _ebss
+  cmp r2, r3
+  bcc FillZerobss
+
+/* Call the clock system intitialization function.*/
+    bl  SystemInit
+    
+/* Call the application's entry point.*/
+  bl main
+  
+LoopForever:
+    b LoopForever
+
+
+.size Reset_Handler, .-Reset_Handler
+
+/**
+ * @brief  This is the code that gets called when the processor receives an
+ *         unexpected interrupt.  This simply enters an infinite loop, preserving
+ *         the system state for examination by a debugger.
  *
- * Copyright (c) 2011, ARM Limited
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of the ARM Limited nor the
-      names of its contributors may be used to endorse or promote products
-      derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL ARM LIMITED BE LIABLE FOR ANY
- * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-    .syntax unified
-    .arch armv6-m
-
-/* Memory Model
-   The HEAP starts at the end of the DATA section and grows upward.
-
-   The STACK starts at the end of the RAM and grows downward.
-
-   The HEAP and stack STACK are only checked at compile time:
-   (DATA_SIZE + HEAP_SIZE + STACK_SIZE) < RAM_SIZE
-
-   This is just a check for the bare minimum for the Heap+Stack area before
-   aborting compilation, it is not the run time limit:
-   Heap_Size + Stack_Size = 0x80 + 0x80 = 0x100
- */
-    .section .stack
-    .align 3
-#ifdef __STACK_SIZE
-    .equ    Stack_Size, __STACK_SIZE
-#else
-    .equ    Stack_Size, 0x400
-#endif
-    .globl    __StackTop
-    .globl    __StackLimit
-__StackLimit:
-    .space    Stack_Size
-    .size __StackLimit, . - __StackLimit
-__StackTop:
-    .size __StackTop, . - __StackTop
-
-    .section .heap
-    .align 3
-#ifdef __HEAP_SIZE
-    .equ    Heap_Size, __HEAP_SIZE
-#else
-    .equ    Heap_Size, 0x80
-#endif
-    .globl    __HeapBase
-    .globl    __HeapLimit
-__HeapBase:
-    .space    Heap_Size
-    .size __HeapBase, . - __HeapBase
-__HeapLimit:
-    .size __HeapLimit, . - __HeapLimit
-
-    .section .vector_table,"a",%progbits
+ * @param  None
+ * @retval : None
+*/
+    .section .text.Default_Handler,"ax",%progbits
+Default_Handler:
+Infinite_Loop:
+  b Infinite_Loop
+  .size Default_Handler, .-Default_Handler
+/******************************************************************************
+*
+* The minimal vector table for a Cortex M0.  Note that the proper constructs
+* must be placed on this to ensure that it ends up at physical address
+* 0x0000.0000.
+*
+******************************************************************************/
+    .section .isr_vector,"a",%progbits
     .align 2
     .globl __isr_vector
 __isr_vector:
-    .long    __StackTop            /* Top of Stack */
+    .long    _estack            /* Top of Stack */
     .long    Reset_Handler         /* Reset Handler */
     .long    NMI_Handler           /* NMI Handler */
-    .long    0                     /* Hard Fault Handler */
+    .long    HardFault_Handler                     /* Hard Fault Handler */
     .long    0                     /* Reserved */
     .long    0                     /* Reserved */
     .long    0                     /* Reserved */
@@ -130,44 +182,7 @@ __isr_vector:
     .long   Reserved47_IRQHandler   /* Reserved interrupt 47 */
 
     .size    __isr_vector, . - __isr_vector
-
-    .section .text.Reset_Handler
-    .thumb
-    .thumb_func
-    .align 2
-    .globl    Reset_Handler
-    .type    Reset_Handler, %function
-Reset_Handler:
-/*     Loop to copy data from read only memory to RAM. The ranges
- *      of copy from/to are specified by following symbols evaluated in
- *      linker script.
- *      __etext: End of code section, i.e., begin of data sections to copy from.
- *      __data_start__/__data_end__: RAM address range that data should be
- *      copied to. Both must be aligned to 4 bytes boundary.  */
-
-    ldr    r1, =__etext
-    ldr    r2, =__data_start__
-    ldr    r3, =__data_end__
-
-    subs    r3, r2
-    ble    .flash_to_ram_loop_end
-
-    movs    r4, 0
-.flash_to_ram_loop:
-    ldr    r0, [r1,r4]
-    str    r0, [r2,r4]
-    adds    r4, 4
-    cmp    r4, r3
-    blt    .flash_to_ram_loop
-.flash_to_ram_loop_end:
-
-    ldr    r0, =SystemInit
-    blx    r0
-    ldr    r0, =main
-    bx    r0
-    .pool
-    .size Reset_Handler, . - Reset_Handler
-
+ 
     .text
 /*    Macro to define default handlers. Default handler
  *    will be weak symbol and just dead loops. They can be
@@ -187,8 +202,6 @@ Reset_Handler:
     def_default_handler     SVC_Handler
     def_default_handler     PendSV_Handler
     def_default_handler     SysTick_Handler
-    def_default_handler     Default_Handler
-
     def_default_handler     Reserved16_IRQHandler
     def_default_handler     Reserved17_IRQHandler
     def_default_handler     Reserved18_IRQHandler
@@ -237,3 +250,6 @@ kinetis_flash_config:
     .long 0xfffeffff
 
     .end
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+

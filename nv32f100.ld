@@ -1,166 +1,175 @@
 /*
- * KL26Z ARM GCC linker script file, Martin Kojtal (0xc0170)
+ * GCC linker script for STM32 microcontrollers (ARM Cortex-M).
+ *
+ * It exports the symbols needed for the CMSIS assembler startup script for GCC
+ * ARM toolchains (_sidata, _sdata, _edata, _sbss, _ebss) and sets the entry
+ * point to Reset_Handler.
+ *
+ * Adapt FLASH/RAM size for your particular device below.
+ *
+ * @author Bjørn Forsman
  */
 
 MEMORY
 {
   VECTORS (rx) : ORIGIN = 0x00000000, LENGTH = 0x00000400
   FLASH_PROTECTION	(rx) : ORIGIN = 0x00000400, LENGTH = 0x00000010
-  FLASH (rx) : ORIGIN = 0x00000410, LENGTH = 128K - 0x00000410
-  RAM (rwx) : ORIGIN =  0x1FFFF800, LENGTH = 8K
+  flash (rx) : ORIGIN = 0x00000410, LENGTH = 128K - 0x00000410
+  ram (rwx) : ORIGIN =  0x1FFFF800, LENGTH = 8K
 }
 
-/* Linker script to place sections and symbol values. Should be used together
- * with other linker script that defines memory regions FLASH and RAM.
- * It references following symbols, which must be defined in code:
- * _reset_init : Entry of reset handler
- *
- * It defines following symbols, which code can use without definition:
- * __exidx_start
- * __exidx_end
- * __etext
- * __data_start__
- * __preinit_array_start
- * __preinit_array_end
- * __init_array_start
- * __init_array_end
- * __fini_array_start
- * __fini_array_end
- * __data_end__
- * __bss_start__
- * __bss_end__
- * __end__
- * end
- * __HeapLimit
- * __StackLimit
- * __StackTop
- * __stack
- */
+
 ENTRY(Reset_Handler)
+
+/*
+ * Reserve memory for heap and stack. The linker will issue an error if there
+ * is not enough memory.
+ *
+ * NOTE: The reserved heap and stack will be added to the bss column of the
+ * binutils size command.
+ */
+_heap_size = 1024;    /* required amount of heap  */
+_stack_size = 1024;   /* required amount of stack */
+
+/*
+ * The stack starts at the end of RAM and grows downwards. Full-descending
+ * stack; decrement first, then store.
+ */
+_estack = ORIGIN(ram) + LENGTH(ram);
 
 SECTIONS
 {
+    /* Reset and ISR vectors */
     .isr_vector :
     {
-        __vector_table = .;
-        KEEP(*(.vector_table))
-        *(.text.Reset_Handler)
-        *(.text.System_Init)
-         . = ALIGN(4);
-    } > VECTORS
-
+        __isr_vector_start__ = .;
+        KEEP(*(.isr_vector)) /* without 'KEEP' the garbage collector discards this section */
+        ASSERT(. != __isr_vector_start__, "The .isr_vector section is empty");
+    } >VECTORS
     .flash_protect :
     {
         KEEP(*(.kinetis_flash_config_field))
          . = ALIGN(4);
     } > FLASH_PROTECTION
 
+    /* Text section (code and read-only data) */
     .text :
     {
-        *(.text*)
+        . = ALIGN(4);
+        _stext = .;
+        *(.text*)   /* code */
+        *(.rodata*) /* read only data */
 
+        /*
+         * NOTE: .glue_7 and .glue_7t sections are not needed because Cortex-M
+         * only supports Thumb instructions, no ARM/Thumb interworking.
+         */
+
+        /* Static constructors and destructors */
         KEEP(*(.init))
         KEEP(*(.fini))
 
-        /* .ctors */
-        *crtbegin.o(.ctors)
-        *crtbegin?.o(.ctors)
-        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
-        *(SORT(.ctors.*))
-        *(.ctors)
-
-        /* .dtors */
-        *crtbegin.o(.dtors)
-        *crtbegin?.o(.dtors)
-        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
-        *(SORT(.dtors.*))
-        *(.dtors)
-
-        *(.rodata*)
-
-        KEEP(*(.eh_frame*))
-    } > FLASH
-
-    .ARM.extab :
-    {
-        *(.ARM.extab* .gnu.linkonce.armextab.*)
-    } > FLASH
-
-    __exidx_start = .;
-    .ARM.exidx :
-    {
-        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-    } > FLASH
-    __exidx_end = .;
-
-    . = ALIGN(4);
-    __etext = .;
-
-    .data : AT (__etext)
-    {
         . = ALIGN(4);
-        __data_start__ = .;
-        *(vtable)
-        *(.data*)
+        _etext = .;
+    } >flash
 
-        . = ALIGN(4);
-        /* preinit data */
-        PROVIDE_HIDDEN (__preinit_array_start = .);
-        KEEP(*(.preinit_array))
-        PROVIDE_HIDDEN (__preinit_array_end = .);
 
-        . = ALIGN(4);
-        /* init data */
-        PROVIDE_HIDDEN (__init_array_start = .);
+    /*
+     * Stack unwinding and exception handling sections.
+     *
+     * ARM compilers emit object files with .ARM.extab and .ARM.exidx sections
+     * when using C++ exceptions. Also, at least GCC emits those sections when
+     * dividing large numbers (64-bit) in C. So we have to handle them.
+     *
+     * (ARM uses .ARM.extab and .ARM.exidx instead of the .eh_frame section
+     * used on x86.)
+     */
+    .ARM.extab : /* exception unwinding information */
+    {
+        *(.ARM.extab*)
+    } >flash
+    .ARM.exidx : /* index entries for section unwinding */
+    {
+        *(.ARM.exidx*)
+    } >flash
+
+
+    /*
+     * Newlib and Eglibc (at least) need these for C++ support.
+     *
+     * (Copied from Sourcery CodeBench Lite: arm-none-eabi-gcc -V)
+     */
+    .preinit_array :
+    {
+        PROVIDE_HIDDEN(__preinit_array_start = .);
+        KEEP(*(.preinit_array*))
+        PROVIDE_HIDDEN(__preinit_array_end = .);
+    } >flash
+    .init_array :
+    {
+        PROVIDE_HIDDEN(__init_array_start = .);
         KEEP(*(SORT(.init_array.*)))
-        KEEP(*(.init_array))
-        PROVIDE_HIDDEN (__init_array_end = .);
-
-
-        . = ALIGN(4);
-        /* finit data */
-        PROVIDE_HIDDEN (__fini_array_start = .);
+        KEEP(*(.init_array*))
+        PROVIDE_HIDDEN(__init_array_end = .);
+    } >flash
+    .fini_array :
+    {
+        PROVIDE_HIDDEN(__fini_array_start = .);
         KEEP(*(SORT(.fini_array.*)))
-        KEEP(*(.fini_array))
-        PROVIDE_HIDDEN (__fini_array_end = .);
+        KEEP(*(.fini_array*))
+        PROVIDE_HIDDEN(__fini_array_end = .);
+    } >flash
 
+
+    /*
+     * Initialized data section. This section is programmed into FLASH (LMA
+     * address) and copied to RAM (VMA address) in startup code.
+     */
+    _sidata = .;
+    .data : AT(_sidata) /* LMA address is _sidata (in FLASH) */
+    {
         . = ALIGN(4);
-        /* All data end */
-        __data_end__ = .;
+        _sdata = .; /* data section VMA address */
+        *(.data*)
+        . = ALIGN(4);
+        _edata = .;
+    } >ram
 
-    } > RAM
+  PROVIDE ( end = _ebss );
+  PROVIDE ( _end = _ebss );
 
+    /* Uninitialized data section (zeroed out by startup code) */
     .bss :
     {
-        __bss_start__ = .;
+        . = ALIGN(4);
+        _sbss = .;
         *(.bss*)
         *(COMMON)
         . = ALIGN(4);
-        __bss_end__ = .;
-    } > RAM
+        _ebss = .;
+    } >ram
 
-    .heap :
+
+    /*
+     * Reserve memory for heap and stack. The linker will issue an error if
+     * there is not enough memory.
+     */
+    ._heap :
     {
-        __end__ = .;
-        end = __end__;
-        *(.heap*)
-        __HeapLimit = .;
-    } > RAM
-
-    /* .stack_dummy section doesn't contains any symbols. It is only
-     * used for linker to calculate size of stack sections, and assign
-     * values to stack symbols later */
-    .stack_dummy :
+        . = ALIGN(4);
+        . = . + _heap_size;
+        . = ALIGN(4);
+    } >ram
+    ._stack :
     {
-        *(.stack)
-    } > RAM
-
-    /* Set stack top to end of RAM, and stack limit move down by
-     * size of stack_dummy section */
-    __StackTop = ORIGIN(RAM) + LENGTH(RAM);
-    __StackLimit = __StackTop - SIZEOF(.stack_dummy);
-    PROVIDE(__stack = __StackTop);
-
-    /* Check if data + heap + stack exceeds RAM limit */
-    ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed with stack")
+        . = ALIGN(4);
+        . = . + _stack_size;
+        . = ALIGN(4);
+    } >ram
 }
+
+/* Nice to have */
+__isr_vector_size__ = SIZEOF(.isr_vector);
+__text_size__ = SIZEOF(.text);
+__data_size__ = SIZEOF(.data);
+__bss_size__ = SIZEOF(.bss);

@@ -16,11 +16,19 @@
 int main(void);
 void RTC_Task(void);
 
+void HardFault_Handler(void)
+{
+  while (1);
+  
+}
 /********************************************************************/
 int main(void)
 {
+  volatile uint8_t *p;
+  p=malloc(100);
   /*系统初始化*/
   sysinit();
+  p[0]=100;
 
   RTC_ConfigType sRTCConfig;
   RTC_ConfigType *pRTCConfig = &sRTCConfig;
