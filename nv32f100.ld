@@ -132,6 +132,7 @@ SECTIONS
         _sdata = .; /* data section VMA address */
         *(.data*)
         . = ALIGN(4);
+        *(.ramfunctions) /* !!!! Placing functions in .ramfunctions section in RAM */
         _edata = .;
     } >ram
 
