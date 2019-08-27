@@ -12,8 +12,8 @@
 
 MEMORY
 {
-  VECTORS (rx) : ORIGIN = 0x00000000, LENGTH = 0x00000400
-  FLASH_PROTECTION	(rx) : ORIGIN = 0x00000400, LENGTH = 0x00000010
+  vectors (rx) : ORIGIN = 0x00000000, LENGTH = 0x00000400
+  flash_protection	(rx) : ORIGIN = 0x00000400, LENGTH = 0x00000010
   flash (rx) : ORIGIN = 0x00000410, LENGTH = 128K - 0x00000410
   ram (rwx) : ORIGIN =  0x1FFFF800, LENGTH = 8K
 }
@@ -45,12 +45,12 @@ SECTIONS
         __isr_vector_start__ = .;
         KEEP(*(.isr_vector)) /* without 'KEEP' the garbage collector discards this section */
         ASSERT(. != __isr_vector_start__, "The .isr_vector section is empty");
-    } >VECTORS
+    } >vectors
     .flash_protect :
     {
-        KEEP(*(.kinetis_flash_config_field))
+        KEEP(*(.nv32_flash_config_field))
          . = ALIGN(4);
-    } > FLASH_PROTECTION
+    } > flash_protection
 
     /* Text section (code and read-only data) */
     .text :

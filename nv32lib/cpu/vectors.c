@@ -17,7 +17,7 @@ typedef void (*vector_entry)(void);
 const vector_entry  __vector_table[] __attribute__((at(0x00))) =
 #elif (defined(__GNUC__))
 //void (* const __vector_table[])() __attribute__ ((section(".vectortable"))) = 
-void (* const InterruptVector[])() __attribute__ ((section(".vectortable"))) = 
+void (* const InterruptVector[])() __attribute__ ((section(".isr_vector"))) = 
 #else
 #pragma location = ".intvec"
 const vector_entry  __vector_table[] = //@ ".intvec" =
@@ -78,7 +78,7 @@ const vector_entry  __vector_table[] = //@ ".intvec" =
 #ifdef KEIL
 const uint32_t  __flash_config[] __attribute__((at(0x400))) =
 #elif (defined(__GNUC__))
-const uint32_t __flash_config[] __attribute__ ((section(".cfmconfig"))) = 
+const uint32_t __flash_config[] __attribute__ ((section(".nv32_flash_config_field"))) = 
 #else
 #pragma location = 0x400
 __root const uint32_t  __flash_config[] = //@ ".intvec" =

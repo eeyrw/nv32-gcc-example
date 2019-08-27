@@ -23,10 +23,9 @@ extern unsigned long __initial_sp[];
 extern void Reset_Handler( void );
 #if (defined(__GNUC__))
 extern unsigned long _estack;
-extern void __thumb_startup(void);
+extern void Reset_Handler(void);
 #define VECTOR_000      (pointer*)&_estack	//          ARM core        Initial Supervisor SP
-#define VECTOR_001      __thumb_startup	// 0x0000_0004 1 -          ARM core        Initial Program Counter
-//#define VECTOR_001      __startup //__thumb_startup	// 0x0000_0004 1 -          ARM core        Initial Program Counter
+#define VECTOR_001      Reset_Handler	// 0x0000_0004 1 -          ARM core        Initial Program Counter
 #elif (defined(KEIL))
 #define VECTOR_000      (pointer*)__initial_sp	//          ARM core        Initial Supervisor SP
 #define VECTOR_001      Reset_Handler						// 0x0000_0004 1 -          ARM core        Initial Program Counter
