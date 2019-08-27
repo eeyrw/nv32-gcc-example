@@ -29,7 +29,7 @@ ENTRY(Reset_Handler)
  * binutils size command.
  */
 _heap_size = 1024;    /* required amount of heap  */
-_stack_size = 1024;   /* required amount of stack */
+_stack_size = 2048;   /* required amount of stack */
 
 /*
  * The stack starts at the end of RAM and grows downwards. Full-descending
