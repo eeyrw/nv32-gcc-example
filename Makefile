@@ -64,7 +64,7 @@ LD_FLAGS = $(MC_FLAGS) -g -specs=nano.specs -specs=nosys.specs -gdwarf-2 -mthumb
 all: $(OBJECTS) $(PROJECT_NAME).elf  $(PROJECT_NAME).hex $(PROJECT_NAME).bin
 	$(TOOLCHAIN)size $(PROJECT_NAME).elf
 
-%.o: %.c
+%.o: %.c Makefile
 	$(CC) -c $(CP_FLAGS) -I . $(INC_DIR) $< -o $@
 
 %.o: %.s
