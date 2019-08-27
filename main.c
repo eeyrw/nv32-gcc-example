@@ -21,14 +21,17 @@ void HardFault_Handler(void)
   while (1);
   
 }
+extern void stdio_setup(void);
 /********************************************************************/
 int main(void)
 {
   volatile uint8_t *p;
+  stdio_setup();
   p=malloc(100);
   /*系统初始化*/
   sysinit();
   p[0]=100;
+  
 
   RTC_ConfigType sRTCConfig;
   RTC_ConfigType *pRTCConfig = &sRTCConfig;
@@ -36,7 +39,7 @@ int main(void)
   //printf("\nRunning the GPIO_demo project.\n");
 
   /* 配置RTC模块每隔1s产生一次中断 */
-  pRTCConfig->u16ModuloValue = 9;
+  pRTCConfig->u16ModuloValue = 0;
   pRTCConfig->bInterruptEn = RTC_INTERRUPT_ENABLE;    /* 使能中断*/
   pRTCConfig->bClockSource = RTC_CLKSRC_1KHZ;         /* 选择1KHz时钟源 */
   pRTCConfig->bClockPresaler = RTC_CLK_PRESCALER_100; /* 时钟分频系数100 */
